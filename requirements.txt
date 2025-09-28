@@ -1,0 +1,12 @@
+google-generativeai
+PyMuPDF
+git+https://github.com/openai/whisper.git
+scikit-image
+sentence-transformers
+faiss-cpu
+thefuzz[speedup]
+requests
+Pillow
+ipywidgets
+nest_asyncio
+pandas
