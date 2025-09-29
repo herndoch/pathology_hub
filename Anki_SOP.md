@@ -1,155 +1,121 @@
-Capiche. I understand perfectly. This is a major, and brilliant, evolution of the workflow.
+### **Comprehensive AI Guide: CCH Anki Generation Engine**
 
-You are moving from a generic batch-processing model to a **source-centric, modular system**. This is far superior for organization and tracking progress. Creating separate CSVs for each source (`BST_Horvai_Anki.csv`, etc.) makes the entire pipeline transparent.
-
-Furthermore, separating the **Gallery** into its own dedicated field is a significant upgrade for card design and flexibility in Anki. It allows you to style and position the image gallery independently from the main text content.
-
-This requires a new definitive SOP. All previous versions are now obsolete.
-
----
----
-
-### **The CCH Anki Generation Project: Master SOP and User Implementation Guide**
-
-**Document Version:** 14.0 (Definitive Master Version)
+**Document Version:** 19.0 (Definitive Master Protocol - No Placeholders)
 **Date:** September 28, 2025
 
-**Objective:** To establish a modular, source-centric, and repeatable process for generating advanced Anki flashcards. This workflow creates separate "front" files for each source and a single "back" file from a master notebook, designed for a 4-field Anki note type (`Front`, `Markdown`, `Gallery`, `Tags`).
+**Objective:** To provide a complete and unambiguous specification for an AI system to process structured source materials into a set of modular, relational CSV files and a supporting shell script. This protocol uses concrete file paths and examples throughout to eliminate all ambiguity.
 
 ---
-### **Part I: Standard Operating Procedure for AI Execution**
+#### **1.0 Foundational Principles**
+
+1.  **Strict Protocol Adherence:** The AI must execute every rule within this document without deviation.
+2.  **Pedagogical Mandate:** The primary objective is the creation of educationally effective learning tools, enforced by the **Intelligent Cloze Generation Mandate (Rule 5.3)**.
+3.  **Source-Centric Modularity:** Each input source JSON file must result in a discrete output CSV file for card fronts.
+4.  **Tag as Relational Primary Key:** The `Tag` string is the primary key and MUST be the first field in every data row.
+5.  **Strict Content Format Specificity:** `Gallery` content is HTML; `Markdown` content is raw Markdown.
+
 ---
-
-#### **1.0 Governing Principles**
-
-1.  **Strict Adherence:** The AI must follow every rule in this SOP (v14.0) without deviation.
-2.  **Source-Separated Outputs:** The AI MUST generate a distinct "fronts" CSV for each source JSON file provided (e.g., `BST_Horvai_Figures.json` -> `BST_Horvai_Anki.csv`).
-3.  **Four-Field Card Structure:** The entire process is designed to populate a four-field Anki note. The `Gallery` is now a distinct data field, separate from the notebook `Markdown`.
-4.  **Tag-First Mandate:** In all generated CSVs, the `Tag` field MUST be the first column. This ensures it acts as the primary key for all data merging.
-5.  **Content Integrity:** The `Markdown` field for the back of the card must be extracted from the notebook and provided *as raw, unprocessed Markdown*. HTML conversion will be handled by Anki's editor. The `Gallery` field, however, MUST be formatted as clean HTML.
-
 #### **2.0 Input Specification**
 
-1.  **A list of one or more Figure Library JSON files** (e.g., `BST_Horvai_Figures.json`, `BST_Lecture_SoftTissue1.json`). These are the sources for the **front** of the cards.
-2.  **A single Notebook Markdown file** (e.g., `BST Pathology Notebook.md`). This is the **sole source for the back text** of the cards.
+The AI shall be provided with the following assets for processing:
 
-#### **3.0 Core Processing Logic (The Two-Stage Method)**
+1.  **Source Libraries (List of JSON files):**
+    *   A list of one or more absolute file paths to JSON documents.
+    *   Example Input Path: `"/mnt/chromeos/GoogleDrive/MyDrive/1-Projects/Knowledge_Pipeline/_asset_library/textbooks/Breast_Pattern/Breast_Pattern_Figures.json"`
+    *   Each object in a JSON array MUST contain:
+        *   `image_path` (string): The absolute path to the source image file.
+        *   `description` (string): Text for cloze generation.
+        *   `notebook_links` (array of objects): Contains a `heading` for tag generation.
 
-**3.1. Stage 1: Generate Card Fronts (Source by Source)**
-
-1.  For **each** source JSON file provided by the user:
-    *   Determine the output filename based on the input (e.g., `BST_Horvai_Figures.json` -> `BST_Horvai_Anki.csv`).
-    *   Initialize an empty list for this specific source's card data.
-    *   Iterate through each figure object in the *current* JSON file.
-    *   For each figure:
-        *   Generate the Anki Tag (e.g., `BST::Leiomyoma`).
-        *   Generate the HTML for the Front field (cloze sentence + `<br><br>` + prefixed `<img>` tag).
-        *   Store the `Tag` and `Front` content.
-    *   **Output File:** Write the list to a pipe-delimited CSV file named `[Source_JSON]_Anki.csv`. The structure MUST be: `[Tag]|[Front Content]`.
-2.  Repeat this process for all provided JSON files, resulting in multiple `*_Anki.csv` output files.
-
-**3.2. Stage 2: Generate Master Backs (Text and Gallery)**
-
-1.  First, scan **all** provided source JSON files to compile a list of every unique tag that will be generated across the entire project.
-2.  Determine the output filename from the notebook file (e.g., `BST_Pathology_Notebook.md` -> `BST_Pathology_Notebook_Anki.csv`).
-3.  For **each** unique tag identified in step 1:
-    *   **A. Build the Gallery Field:** Scan **all** source JSON files again. Find *every* figure object that resolves to the current unique tag. Collect their sanitized, prefixed image paths and compile them into a single string of HTML `<img>` tags. This string is the complete content for the `Gallery` field.
-    *   **B. Extract the Markdown Field:** Find the heading in the `notebook.md` file that exactly matches the `Specific_Diagnosis` part of the tag. Extract **all** raw Markdown text under that heading until the next heading of the same or higher level. This raw text is the complete content for the `Markdown` field.
-    *   **C. Store the Data:** Create a record containing the `Tag`, the `Gallery` HTML string, and the raw `Markdown` text.
-4.  **Output File:** Write all records to a single, pipe-delimited CSV file named `[Notebook_Filename]_Anki.csv`. The structure MUST be: `[Tag]|[Gallery]|[Markdown]`.
+2.  **Master Notebook (Single Markdown file):**
+    *   A single absolute file path to a UTF-8 encoded Markdown document.
+    *   Example Input Path: `"/mnt/chromeos/GoogleDrive/MyDrive/1-Projects/Knowledge_Pipeline/_asset_library/notebooks/Breast_Pathology_Notebook.md"`
 
 ---
-### **Part II: End-User Implementation Guide (Colab Workflow)**
+#### **3.0 Computational Workflow**
+
+The workflow is a deterministic, three-stage process.
+
+**3.1. Stage 1: Serialization of High-Quality Front-End Data**
+
+1.  For each source JSON file provided:
+    1.  **Derive Output Path:** The output filename is derived by replacing the `.json` extension of the source file with `_Anki.csv`.
+        *   **Example:** If the input path is `.../Breast_Pattern_Figures.json`, the derived output path MUST BE `.../Breast_Pattern_Figures_Anki.csv`.
+    2.  Iterate through each `figure` object in the JSON file.
+    3.  For each `figure`, construct a two-field record `[Tag, Front_Content]` and append it to a temporary data store.
+    4.  Serialize the data store to the derived output path as a pipe-delimited CSV.
+
+**3.2. Stage 2: Aggregation and Serialization of Back-End Data**
+
+1.  **Global Tag Aggregation:** Scan **all** provided Source Library JSON files to compile a master set of all **unique** tags.
+2.  **Data Extraction and Assembly:**
+    1.  **Derive Output Path:** The output filename is derived from the Master Notebook filename.
+        *   **Example:** If the input path is `.../notebooks/Breast_Pathology_Notebook.md`, the derived output path MUST BE `.../notebooks/Breast_Pathology_Notebook_Anki.csv`.
+    2.  For each `unique_tag` in the master set, construct a three-field record `[unique_tag, Gallery, Markdown]` and append it to a final data store.
+    3.  Serialize the final data store to the derived output path as a pipe-delimited CSV.
+
+**3.3. Stage 3: Generation of Media Transfer Script**
+
+1.  The AI SHALL generate a `bash` script named `process_media.sh`.
+2.  **Target Path:** The script MUST be hardcoded with the specific, non-negotiable target directory: `~/.local/share/Anki2/CCH/collection.media/`
+3.  **Operation:** The script MUST perform a direct `cp` (copy) operation for every image file path found in the source JSONs. No renaming will occur. The script must contain the exact, absolute source directories.
+    *   **Example Script Content:** The generated script will contain lines similar to:
+        `SOURCE_DIR="/mnt/chromeos/GoogleDrive/MyDrive/1-Projects/Knowledge_Pipeline/_asset_library/textbooks/Breast_Pattern/figure_images/"`
+        `find "$SOURCE_DIR" ... -exec cp -v {} "$ANKI_MEDIA_DIR" \;`
+
 ---
+#### **4.0 Output Asset Specification**
 
-**Objective:** To correctly set up Anki, then use the multiple AI-generated CSV files to merge and import your new, powerful 4-field flashcards.
+*   **Front-End CSV File:**
+    *   Example Filename: `Breast_Pattern_Figures_Anki.csv`
+    *   Schema: `Tag|Front_Content`
+*   **Back-End CSV File:**
+    *   Example Filename: `Breast_Pathology_Notebook_Anki.csv`
+    *   Schema: `Tag|Gallery|Markdown`
+*   **Media Script:**
+    *   Filename: `process_media.sh`
 
-#### **0.0 Phase 0: One-Time Anki Setup (CRITICAL FIRST STEP)**
+---
+#### **5.0 Core Mandates: The Rules of Generation**
 
-1.  Open the Anki desktop application.
-2.  Go to **Tools > Manage Note Types**.
-3.  Click **Add** and choose to add a new type based on `Cloze`.
-4.  Name the new note type `Pathology Cloze (4-Field)`.
-5.  With the new type selected, click **Fields...**.
-6.  Add two new fields. You should have a total of four fields. Rename them to be exactly:
-    *   `Text` (This will hold the front/cloze content)
-    *   `Extra` (This will hold the Markdown notebook text)
-    *   `Gallery` (This will hold the image gallery)
-    *   `Tags` (This will be populated by the import process)
-7.  Click **Save**. Your Anki is now ready.
+**5.1. Tag Generation Mandate:**
+*   **Format:** `System::Specific_Diagnosis`.
+*   **Example:** Given a notebook named `Breast_Pathology_Notebook.md` and a JSON `heading` of `"Pseudoangiomatous Stromal Hyperplasia (PASH)"`, the generated tag MUST BE the exact string `Breast::Pseudoangiomatous_Stromal_Hyperplasia`. Parentheticals are stripped, and spaces are replaced with underscores.
 
-#### **1.0 Phase 1: Generate and Save AI Files**
+**5.2. Simplified Image `src` Mandate**
+*   **Rule:** The `src` attribute of an `<img>` tag MUST contain **only the filename component** of the `image_path`.
+*   **Example:** If the input `image_path` is `"/mnt/chromeos/GoogleDrive/MyDrive/1-Projects/Knowledge_Pipeline/_asset_library/textbooks/Breast_Pattern/figure_images/Breast_Pattern_page_103_img_2.jpeg"`, the `src` attribute in the generated HTML MUST BE exactly `'Breast_Pattern_page_103_img_2.jpeg'`.
 
-1.  Provide the AI with the paths to your source JSON files and your notebook file.
-2.  The AI will provide multiple files:
-    *   Several `[Source]_Anki.csv` files (e.g., `BST_Horvai_Anki.csv`, `BST_Lecture_Anki.csv`).
-    *   One `[Notebook]_Anki.csv` file.
-    *   One `process_media.sh` script.
-3.  Save all these files into the same folder (e.g., `~/Knowledge_Pipeline/anki_exports/`).
+**5.3. Intelligent Cloze Generation Mandate (CRITICAL QUALITY RULE)**
+*   **Rule:** The AI must synthesize a high-quality, context-rich sentence and create a cloze deletion that tests a key concept, not just the diagnosis name. Low-value, zero-context clozes are forbidden.
 
-#### **2.0 Phase 2: Process Media Files**
-1.  Open your Terminal and run the `process_media.sh` script as before. This will copy and prefix all necessary images.
+**5.4. Gallery Field Mandate:**
+*   **Rule:** The content MUST be a single HTML string of directly concatenated `<img>` tags.
 
-#### **3.0 Phase 3: Merge CSV Files in Google Colab**
+**5.5. Markdown Field Mandate:**
+*   **Rule:** The content MUST be the raw, unprocessed text extracted from the notebook file. It MUST NOT be converted to HTML.
 
-1.  Open a new Colab notebook and mount your Google Drive.
-2.  Copy and paste the following Python script. **This script is new and more powerful.** It will automatically find all your "fronts" files and merge them with your single "backs" file.
+---
+#### **6.0 Execution Example & Compliance Test**
 
-    ```python
-    import pandas as pd
-    import glob
-    import os
+**Given this exact input `figure` object:**
+```json
+{
+  "image_path": "/mnt/chromeos/GoogleDrive/MyDrive/1-Projects/Knowledge_Pipeline/_asset_library/textbooks/Breast_Pattern/figure_images/Breast_Pattern_page_103_img_2.jpeg",
+  "description": "Pseudoangiomatous stromal hyperplasia (PASH): Histologically, PASH is characterized by stromal fibroblastic cells forming complex, anastomosing slit-like spaces.",
+  "notebook_links": [{"heading": "Pseudoangiomatous Stromal Hyperplasia (PASH)"}]
+}
+```
 
-    # --- 1. DEFINE PATHS & FILENAMES ---
-    # The folder where all your AI-generated CSVs are saved.
-    export_folder = '/content/drive/MyDrive/1-Projects/Knowledge_Pipeline/anki_exports/'
-    # The filename of your single "backs" file.
-    notebook_csv_name = 'BST_Pathology_Notebook_Anki.csv'
-    # The desired name for the final merged file.
-    output_file_path = os.path.join(export_folder, 'anki_import_final.csv')
+**And this input Master Notebook filename:**
+`Breast_Pathology_Notebook.md`
 
-    # --- 2. LOAD AND CONCATENATE ALL "FRONTS" FILES ---
-    # Find all CSV files in the folder that are NOT the notebook CSV.
-    fronts_files = glob.glob(os.path.join(export_folder, '*_Anki.csv'))
-    fronts_files = [f for f in fronts_files if os.path.basename(f) != notebook_csv_name]
+**The AI MUST produce this exact, single line of output for the `Breast_Pattern_Figures_Anki.csv` file:**
 
-    print(f"Found {len(fronts_files)} source files to merge.")
-    
-    # Load and combine them into a single DataFrame.
-    df_list = [pd.read_csv(f, sep='|', header=None, names=['Tags', 'Text']) for f in fronts_files]
-    fronts_df = pd.concat(df_list, ignore_index=True)
+`Breast::Pseudoangiomatous_Stromal_Hyperplasia|A key feature distinguishing Pseudoangiomatous Stromal Hyperplasia (PASH) from a low-grade angiosarcoma is that the slit-like spaces are lined by bland myofibroblasts and are characteristically {{c1::empty}}, lacking red blood cells.<br><br><img src='Breast_Pattern_page_103_img_2.jpeg'>`
 
-    # --- 3. LOAD THE "BACKS" FILE ---
-    backs_file_path = os.path.join(export_folder, notebook_csv_name)
-    backs_df = pd.read_csv(backs_file_path, sep='|', header=None, names=['Tags', 'Gallery', 'Extra'])
-
-    # --- 4. MERGE THE DATA ---
-    # Merge the combined fronts with the master backs using the 'Tags' column.
-    merged_df = pd.merge(fronts_df, backs_df, on='Tags')
-
-    # --- 5. ENSURE CORRECT FINAL COLUMN ORDER FOR ANKI ---
-    # This order must match the import mapping in the next phase.
-    final_df = merged_df[['Text', 'Extra', 'Gallery', 'Tags']]
-
-    # --- 6. SAVE THE FINAL CSV ---
-    final_df.to_csv(output_file_path, sep='|', header=False, index=False)
-
-    print(f"Merge successful! {len(final_df)} cards were processed.")
-    print(f"Final file saved to: {output_file_path}")
-    ```
-3.  Run the cell to create your `anki_import_final.csv`.
-
-#### **4.0 Phase 4: Import into Anki**
-
-1.  Open Anki, go to **File > Import...** and select `anki_import_final.csv`.
-2.  Configure the Import Dialog Box:
-    *   Note Type: **`Pathology Cloze (4-Field)`** (the new type you created).
-    *   Deck: Your destination deck.
-    *   Fields separated by: **Pipe (`|`)**.
-    *   **Allow HTML in fields:** Ensure this is **checked**.
-    *   **Field Mapping (CRITICAL):**
-        *   `Field 1` -> **Text** (Front/Cloze)
-        *   `Field 2` -> **Extra** (Markdown text)
-        *   `Field 3` -> **Gallery**
-        *   `Field 4` -> **Tags**
-3.  Click **Import**.
+*   **Compliance Analysis:**
+    *   **Tag:** Correctly generated as `Breast::Pseudoangiomatous_Stromal_Hyperplasia` (Rule 5.1).
+    *   **Cloze Sentence:** High-quality, synthesized, and tests a key distinguishing feature (Rule 5.3).
+    *   **Image `src`:** Contains *only the filename* from the absolute path (Rule 5.2).
+    *   **Structure:** The final string is correctly formatted as `Tag|Front_Content`.
