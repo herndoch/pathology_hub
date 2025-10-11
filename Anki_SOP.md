@@ -1,5 +1,3 @@
-Of course. The protocol has been updated to reflect the new image grouping logic for textbooks and the consolidation of all data into a single `tag|front|markdown` CSV file.
-
 ### Comprehensive AI Guide: CCH Anki Generation Engine
 
 **Document Version: 22.0 ; October 1, 2025**
